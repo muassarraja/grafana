@@ -1,4 +1,4 @@
-import { render, screen } from 'test/test-utils';
+import { render, screen, within } from 'test/test-utils';
 
 import { contextSrv } from 'app/core/services/context_srv';
 
@@ -30,6 +30,24 @@ describe('MegaMenuItemText', () => {
 
   afterEach(() => {
     contextSrv.isSignedIn = false;
+  });
+
+  it.each([false, true])('shows a bookmark star without hovering when pinned is %s', (isPinned) => {
+    renderItemText({ isPinned });
+
+    const button = screen.getByRole('button', { name: 'Bookmark Explore' });
+    expect(button).toBeVisible();
+    expect(button).toHaveAttribute('aria-pressed', String(isPinned));
+    expect(within(button).getByTestId('icon-star')).toBeVisible();
+  });
+
+  it('bookmarks an item by clicking its always-visible star', async () => {
+    const onPin = jest.fn();
+    const { user } = renderItemText({ onPin });
+
+    await user.click(screen.getByRole('button', { name: 'Bookmark Explore' }));
+
+    expect(onPin).toHaveBeenCalledWith('/explore');
   });
 
   it('keeps ampersands unescaped in the legacy bookmark tooltip', async () => {
